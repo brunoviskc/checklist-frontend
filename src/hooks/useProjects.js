@@ -150,6 +150,58 @@ export function useProjects() {
     });
   }
 
+  function addEnvironmentToProject(projectId) {
+    setProjects((currentProjects) => {
+      const nextProjects = currentProjects.map((project) => {
+        if (String(project.id) !== String(projectId)) {
+          return project;
+        }
+
+        const nextIndex = (project.ambientes?.length || 0) + 1;
+        const newEnvironment = {
+          id: crypto.randomUUID(),
+          nome: `Ambiente ${nextIndex}`,
+          tipoAmbiente: null,
+          acabamentoInterno: null,
+          acabamentoExterno: null,
+          acabamentoPerfil: null,
+          acabamentoTelinha: null,
+          tipoPorta: null,
+          tipoPortaPassagem: null,
+          tipoPuxador: null,
+          tipoVidro: null,
+          tipoCorredica: null,
+          tipoDobradica: null,
+          tipoAventos: null,
+          tipoAcessorio: null,
+          tipoCabideiro: null,
+          tipoLed: null,
+          tipoPainel: null,
+          tipoRodape: null,
+          observacoes: '',
+          areaM2: 0,
+          mdfM2: 0,
+          itens: [],
+        };
+
+        const ambientes = [...(project.ambientes || []), newEnvironment];
+        const totalMdf = ambientes.reduce((sum, ambiente) => sum + Number(ambiente.mdfM2 || 0), 0);
+        const totalArea = ambientes.reduce((sum, ambiente) => sum + Number(ambiente.areaM2 || 0), 0);
+
+        return {
+          ...project,
+          ambientes,
+          totalMdf,
+          totalArea,
+          percentualMedio: totalArea === 0 ? 0 : (totalMdf / totalArea) * 100,
+        };
+      });
+
+      writeLocalProjects(nextProjects);
+      return nextProjects;
+    });
+  }
+
   return {
     projects,
     filteredProjects,
@@ -159,6 +211,7 @@ export function useProjects() {
     setSearch,
     createProject,
     deleteProject,
+    addEnvironmentToProject,
     selectedProjectId,
   };
 }

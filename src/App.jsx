@@ -7,6 +7,27 @@ import { ProjectCard } from './components/ProjectCard';
 import { ProjectFormModal } from './components/ProjectFormModal';
 import { MdfChart } from './components/MdfChart';
 import { OrdemServico } from './components/OrdemServico';
+import { formatEnumLabel } from './constants/backendEnums';
+
+const environmentEnumFields = [
+  { key: 'tipoAmbiente', label: 'Tipo' },
+  { key: 'acabamentoInterno', label: 'Acabamento interno' },
+  { key: 'acabamentoExterno', label: 'Acabamento externo' },
+  { key: 'acabamentoPerfil', label: 'Acabamento do perfil' },
+  { key: 'acabamentoTelinha', label: 'Telinha' },
+  { key: 'tipoPorta', label: 'Tipo de porta' },
+  { key: 'tipoPortaPassagem', label: 'Tipo de porta passagem' },
+  { key: 'tipoPuxador', label: 'Puxador' },
+  { key: 'tipoVidro', label: 'Vidro' },
+  { key: 'tipoCorredica', label: 'Corrediça' },
+  { key: 'tipoDobradica', label: 'Dobradiça' },
+  { key: 'tipoAventos', label: 'Aventos' },
+  { key: 'tipoAcessorio', label: 'Acessório' },
+  { key: 'tipoCabideiro', label: 'Cabideiro' },
+  { key: 'tipoLed', label: 'LED' },
+  { key: 'tipoPainel', label: 'Painel' },
+  { key: 'tipoRodape', label: 'Rodapé' },
+];
 
 function Shell({ children, onCreateProject, search, setSearch, projects, loading, error, selectedProjectId, onDeleteProject }) {
   const { theme, toggleTheme } = useTheme();
@@ -97,7 +118,7 @@ function DashboardPage({ projects, loading, error, search, setSearch, onDeletePr
   );
 }
 
-function ClientePanelPage({ projects, selectedProjectId }) {
+function ClientePanelPage({ projects, selectedProjectId, onAddEnvironment }) {
   const { id } = useParams();
   const project = projects.find((item) => String(item.id) === String(id)) || projects.find((item) => String(item.id) === String(selectedProjectId));
 
@@ -124,7 +145,16 @@ function ClientePanelPage({ projects, selectedProjectId }) {
       </div>
 
       <div className="detail-card">
-        <h3>Ambientes</h3>
+        <div className="section-head">
+          <h3>Ambientes</h3>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => onAddEnvironment(project.id)}
+          >
+            Adicionar ambiente
+          </button>
+        </div>
         <div className="accordion-list">
           {project.ambientes.map((ambiente) => (
             <details key={ambiente.id}>
@@ -133,17 +163,13 @@ function ClientePanelPage({ projects, selectedProjectId }) {
                 <strong>{ambiente.mdfM2.toFixed(2)} m² MDF</strong>
               </summary>
               <div className="accordion-content">
-                <p>Tipo: {ambiente.tipoAmbiente || '-'}</p>
-                <p>Acabamento interno: {ambiente.acabamentoInterno || '-'}</p>
-                <p>Acabamento externo: {ambiente.acabamentoExterno || '-'}</p>
-                <p>Total do ambiente: {ambiente.areaM2.toFixed(2)} m²</p>
-                <ul>
-                  {ambiente.itens.map((item) => (
-                    <li key={`${ambiente.id}-${item.descricao}`}>
-                      {item.quantidade}x {item.descricao} {item.unidade ? `(${item.unidade})` : ''}
-                    </li>
+                {environmentEnumFields
+                  .filter((field) => ambiente[field.key])
+                  .map((field) => (
+                    <p key={`${ambiente.id}-${field.key}`}>
+                      {field.label}: {formatEnumLabel(ambiente[field.key])}
+                    </p>
                   ))}
-                </ul>
               </div>
             </details>
           ))}
@@ -184,6 +210,7 @@ function AppContent() {
     setSearch,
     createProject,
     deleteProject,
+    addEnvironmentToProject,
     selectedProjectId,
   } = useProjects();
 
@@ -216,7 +243,10 @@ function AppContent() {
               />
             }
           />
-          <Route path="/cliente/:id" element={<ClientePanelPage projects={projects} selectedProjectId={selectedProjectId} />} />
+          <Route
+            path="/cliente/:id"
+            element={<ClientePanelPage projects={projects} selectedProjectId={selectedProjectId} onAddEnvironment={addEnvironmentToProject} />}
+          />
           <Route path="/impressao/:id" element={<PrintPage projects={projects} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
