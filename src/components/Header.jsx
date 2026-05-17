@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ThemeToggle } from './ThemeToggle';
 
-export function Header({ onCreateProject, search, setSearch, showSearch, theme, onToggleTheme, onBack }) {
+export function Header({ onPrimaryAction, primaryActionLabel = 'Novo projeto', search, setSearch, showSearch, theme, onToggleTheme, onBack }) {
   return (
     <header className="site-header">
       <div className="brand-block">
@@ -31,9 +31,9 @@ export function Header({ onCreateProject, search, setSearch, showSearch, theme, 
 
       <div className="header-actions">
         <ThemeToggle theme={theme} onToggle={onToggleTheme} />
-        {onCreateProject && (
-          <button type="button" className="primary-button" onClick={onCreateProject}>
-            Novo projeto
+        {onPrimaryAction && (
+          <button type="button" className="primary-button" onClick={onPrimaryAction}>
+            {primaryActionLabel}
           </button>
         )}
       </div>

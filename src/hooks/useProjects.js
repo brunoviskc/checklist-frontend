@@ -150,6 +150,25 @@ export function useProjects() {
     });
   }
 
+  function updateProject(id, payload) {
+    setProjects((currentProjects) => {
+      const nextProjects = currentProjects.map((project) => {
+        if (String(project.id) !== String(id)) {
+          return project;
+        }
+
+        return normalizeProject({
+          ...project,
+          ...payload,
+          id: project.id,
+        });
+      });
+
+      writeLocalProjects(nextProjects);
+      return nextProjects;
+    });
+  }
+
   function addEnvironmentToProject(projectId) {
     setProjects((currentProjects) => {
       const nextProjects = currentProjects.map((project) => {
@@ -211,6 +230,7 @@ export function useProjects() {
     setSearch,
     createProject,
     deleteProject,
+    updateProject,
     addEnvironmentToProject,
     selectedProjectId,
   };

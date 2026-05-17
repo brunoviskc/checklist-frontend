@@ -5,6 +5,7 @@ import { useProjects } from './hooks/useProjects';
 import { Header } from './components/Header';
 import { ProjectCard } from './components/ProjectCard';
 import { ProjectFormModal } from './components/ProjectFormModal';
+import { ProjectInfoModal } from './components/ProjectInfoModal';
 import { MdfChart } from './components/MdfChart';
 import { OrdemServico } from './components/OrdemServico';
 import { formatEnumLabel } from './constants/backendEnums';
@@ -29,16 +30,22 @@ const environmentEnumFields = [
   { key: 'tipoRodape', label: 'Rodapé' },
 ];
 
-function Shell({ children, onCreateProject, search, setSearch, projects, loading, error, selectedProjectId, onDeleteProject }) {
+function Shell({ children, onCreateProject, onAddEnvironment, search, setSearch, projects, loading, error, selectedProjectId, onDeleteProject }) {
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const isDashboard = location.pathname === '/';
+  const clienteMatch = location.pathname.match(/^\/cliente\/([^/]+)$/);
+  const primaryActionLabel = isDashboard ? 'Novo projeto' : 'Novo ambiente';
+  const primaryAction = isDashboard
+    ? onCreateProject
+    : () => onAddEnvironment(clienteMatch?.[1] || selectedProjectId);
 
   return (
     <div className={`app-shell theme-${theme}`}>
       <Header
-        onCreateProject={onCreateProject}
+        onPrimaryAction={primaryAction}
+        primaryActionLabel={primaryActionLabel}
         search={search}
         setSearch={setSearch}
         showSearch={isDashboard}
@@ -118,8 +125,9 @@ function DashboardPage({ projects, loading, error, search, setSearch, onDeletePr
   );
 }
 
-function ClientePanelPage({ projects, selectedProjectId, onAddEnvironment }) {
+function ClientePanelPage({ projects, selectedProjectId, onAddEnvironment, onEditProject }) {
   const { id } = useParams();
+  const navigate = useNavigate();
   const project = projects.find((item) => String(item.id) === String(id)) || projects.find((item) => String(item.id) === String(selectedProjectId));
 
   if (!project) {
@@ -131,12 +139,21 @@ function ClientePanelPage({ projects, selectedProjectId, onAddEnvironment }) {
       <div className="detail-card">
         <span className="eyebrow">Painel do cliente</span>
         <h2>{project.nomeCliente}</h2>
-        <p>{project.nomeVendedor || 'Vendedor não informado'}</p>
+        <div className="detail-meta">
+          <p>Vendedor: {project.nomeVendedor || 'Vendedor não informado'}</p>
+          <p>Arquiteto: {project.nomeArquiteto || 'Arquiteto não informado'}</p>
+        </div>
 
-        <div className="metrics-grid">
+        <div className="detail-summary-row">
           <div className="metric-box"><span>Ambientes</span><strong>{project.ambientes.length}</strong></div>
-          <div className="metric-box"><span>MDF total</span><strong>{project.totalMdf.toFixed(2)} m²</strong></div>
-          <div className="metric-box"><span>MDF médio</span><strong>{project.percentualMedio.toFixed(1)}%</strong></div>
+          <div className="detail-action-group">
+            <button type="button" className="secondary-button detail-action-card" onClick={() => navigate(`/impressao/${project.id}`)}>
+              Imprimir
+            </button>
+            <button type="button" className="secondary-button detail-action-card" onClick={() => onEditProject(project.id)}>
+              Editar
+            </button>
+          </div>
         </div>
       </div>
 
@@ -210,16 +227,20 @@ function AppContent() {
     setSearch,
     createProject,
     deleteProject,
+    updateProject,
     addEnvironmentToProject,
     selectedProjectId,
   } = useProjects();
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [editingProjectId, setEditingProjectId] = React.useState(null);
+  const editingProject = projects.find((project) => String(project.id) === String(editingProjectId));
 
   return (
     <BrowserRouter>
       <Shell
         onCreateProject={() => setIsModalOpen(true)}
+        onAddEnvironment={addEnvironmentToProject}
         search={search}
         setSearch={setSearch}
         projects={filteredProjects}
@@ -245,7 +266,14 @@ function AppContent() {
           />
           <Route
             path="/cliente/:id"
-            element={<ClientePanelPage projects={projects} selectedProjectId={selectedProjectId} onAddEnvironment={addEnvironmentToProject} />}
+            element={
+              <ClientePanelPage
+                projects={projects}
+                selectedProjectId={selectedProjectId}
+                onAddEnvironment={addEnvironmentToProject}
+                onEditProject={(projectId) => setEditingProjectId(projectId)}
+              />
+            }
           />
           <Route path="/impressao/:id" element={<PrintPage projects={projects} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -258,6 +286,16 @@ function AppContent() {
         onSubmit={(payload) => {
           createProject(payload);
           setIsModalOpen(false);
+        }}
+      />
+
+      <ProjectInfoModal
+        open={Boolean(editingProject)}
+        project={editingProject}
+        onClose={() => setEditingProjectId(null)}
+        onSubmit={(payload) => {
+          updateProject(editingProject.id, payload);
+          setEditingProjectId(null);
         }}
       />
     </BrowserRouter>
