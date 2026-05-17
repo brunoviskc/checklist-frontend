@@ -53,10 +53,16 @@ export function ProjectCard({ project, isSelected, onOpen, onPrint, onDelete }) 
                   key={`${material.nome}-${index}`}
                   type="button"
                   className="project-mdf-pill"
-                  style={{ backgroundColor: material.cor || ['#14b8a6', '#f59e0b', '#ef4444', '#0ea5e9', '#8b5cf6'][index % 5] }}
+                  style={{ backgroundColor: 'transparent' }}
                   onClick={(event) => event.stopPropagation()}
+                  aria-label={`${material.percentual.toFixed(0)}% ${material.nome}`}
                 >
-                  {material.percentual.toFixed(0)}% {material.nome}
+                  <span
+                    className="project-mdf-dot"
+                    style={{ backgroundColor: material.cor || ['#14b8a6', '#f59e0b', '#ef4444', '#0ea5e9', '#8b5cf6'][index % 5] }}
+                    aria-hidden="true"
+                  />
+                  <span className="project-mdf-text">{material.percentual.toFixed(0)}% {material.nome}</span>
                 </button>
               ))}
             </div>
