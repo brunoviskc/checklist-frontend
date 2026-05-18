@@ -1,5 +1,5 @@
 import React from 'react';
-import { getProjects, createProjectOnApi, deleteProjectOnApi, normalizeProject, fallbackProjects, toApiProjectPayload } from '../services/api';
+import { getProjects, createProjectOnApi, deleteProjectOnApi, normalizeProject, fallbackProjects, updateProjectOnApi } from '../services/api';
 
 const STORAGE_KEY = 'checklist-projects-local';
 
@@ -26,6 +26,19 @@ function mergeById(apiProjects, localProjects) {
     const localProject = localById.get(String(project.id));
     return localProject ? { ...project, ...localProject, ambientes: localProject.ambientes?.length ? localProject.ambientes : project.ambientes } : project;
   });
+}
+
+function recalculateProjectTotals(project) {
+  const ambientes = project.ambientes || [];
+  const totalMdf = ambientes.reduce((sum, ambiente) => sum + Number(ambiente.mdfM2 || 0), 0);
+  const totalArea = ambientes.reduce((sum, ambiente) => sum + Number(ambiente.areaM2 || 0), 0);
+
+  return {
+    ...project,
+    totalMdf,
+    totalArea,
+    percentualMedio: totalArea === 0 ? 0 : (totalMdf / totalArea) * 100,
+  };
 }
 
 export function useProjects() {
@@ -130,6 +143,20 @@ export function useProjects() {
     setSelectedProjectId(nextProject.id);
   }
 
+  async function persistProjectToApi(nextProject, failureMessage) {
+    if (mode !== 'api') {
+      return;
+    }
+
+    try {
+      await updateProjectOnApi(nextProject.id, nextProject);
+      setError('');
+    } catch {
+      setMode('local');
+      setError(failureMessage);
+    }
+  }
+
   async function deleteProject(id) {
     if (mode === 'api') {
       try {
@@ -150,93 +177,92 @@ export function useProjects() {
     });
   }
 
-  function updateProject(id, payload) {
-    setProjects((currentProjects) => {
-      const nextProjects = currentProjects.map((project) => {
-        if (String(project.id) !== String(id)) {
-          return project;
+  async function updateProject(id, payload) {
+    const nextProjects = projects.map((project) => {
+      if (String(project.id) !== String(id)) {
+        return project;
+      }
+
+      return recalculateProjectTotals(normalizeProject({
+        ...project,
+        ...payload,
+        id: project.id,
+      }));
+    });
+
+    setProjects(nextProjects);
+    writeLocalProjects(nextProjects);
+
+    const updatedProject = nextProjects.find((project) => String(project.id) === String(id));
+    if (updatedProject) {
+      await persistProjectToApi(updatedProject, 'Alterações do projeto salvas localmente porque a API não respondeu.');
+    }
+  }
+
+  async function updateEnvironmentInProject(projectId, environmentId, payload) {
+    const nextProjects = projects.map((project) => {
+      if (String(project.id) !== String(projectId)) {
+        return project;
+      }
+
+      const ambientes = (project.ambientes || []).map((ambiente) => {
+        if (String(ambiente.id) !== String(environmentId)) {
+          return ambiente;
         }
 
-        return normalizeProject({
-          ...project,
+        return {
+          ...ambiente,
           ...payload,
-          id: project.id,
-        });
-      });
-
-      writeLocalProjects(nextProjects);
-      return nextProjects;
-    });
-  }
-
-  function updateEnvironmentInProject(projectId, environmentId, payload) {
-    setProjects((currentProjects) => {
-      const nextProjects = currentProjects.map((project) => {
-        if (String(project.id) !== String(projectId)) {
-          return project;
-        }
-
-        const ambientes = (project.ambientes || []).map((ambiente) => {
-          if (String(ambiente.id) !== String(environmentId)) {
-            return ambiente;
-          }
-
-          return {
-            ...ambiente,
-            ...payload,
-            id: ambiente.id,
-          };
-        });
-
-        const totalMdf = ambientes.reduce((sum, ambiente) => sum + Number(ambiente.mdfM2 || 0), 0);
-        const totalArea = ambientes.reduce((sum, ambiente) => sum + Number(ambiente.areaM2 || 0), 0);
-
-        return {
-          ...project,
-          ambientes,
-          totalMdf,
-          totalArea,
-          percentualMedio: totalArea === 0 ? 0 : (totalMdf / totalArea) * 100,
+          id: ambiente.id,
         };
       });
 
-      writeLocalProjects(nextProjects);
-      return nextProjects;
-    });
-  }
-
-  function deleteEnvironmentFromProject(projectId, environmentId) {
-    setProjects((currentProjects) => {
-      const nextProjects = currentProjects.map((project) => {
-        if (String(project.id) !== String(projectId)) {
-          return project;
-        }
-
-        const ambientes = (project.ambientes || []).filter((ambiente) => String(ambiente.id) !== String(environmentId));
-        const totalMdf = ambientes.reduce((sum, ambiente) => sum + Number(ambiente.mdfM2 || 0), 0);
-        const totalArea = ambientes.reduce((sum, ambiente) => sum + Number(ambiente.areaM2 || 0), 0);
-
-        return {
-          ...project,
-          ambientes,
-          totalMdf,
-          totalArea,
-          percentualMedio: totalArea === 0 ? 0 : (totalMdf / totalArea) * 100,
-        };
+      return recalculateProjectTotals({
+        ...project,
+        ambientes,
       });
-
-      writeLocalProjects(nextProjects);
-      return nextProjects;
     });
+
+    setProjects(nextProjects);
+    writeLocalProjects(nextProjects);
+
+    const updatedProject = nextProjects.find((project) => String(project.id) === String(projectId));
+    if (updatedProject) {
+      await persistProjectToApi(updatedProject, 'Ambiente salvo localmente porque a API não respondeu.');
+    }
   }
 
-  function addEnvironmentToProject(projectId) {
-    const nextIndex = 1 + (function findCount(projects) {
-      const project = projects.find((p) => String(p.id) === String(projectId));
-      return project ? (project.ambientes?.length || 0) : 0;
-    })(
-      JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') || []
-    );
+  async function deleteEnvironmentFromProject(projectId, environmentId) {
+    const nextProjects = projects.map((project) => {
+      if (String(project.id) !== String(projectId)) {
+        return project;
+      }
+
+      const ambientes = (project.ambientes || []).filter((ambiente) => String(ambiente.id) !== String(environmentId));
+
+      return recalculateProjectTotals({
+        ...project,
+        ambientes,
+      });
+    });
+
+    setProjects(nextProjects);
+    writeLocalProjects(nextProjects);
+
+    const updatedProject = nextProjects.find((project) => String(project.id) === String(projectId));
+    if (updatedProject) {
+      await persistProjectToApi(updatedProject, 'Exclusão do ambiente salva localmente porque a API não respondeu.');
+    }
+  }
+
+  async function addEnvironmentToProject(projectId) {
+    const project = projects.find((p) => String(p.id) === String(projectId));
+
+    if (!project) {
+      return null;
+    }
+
+    const nextIndex = (project.ambientes?.length || 0) + 1;
 
     const newEnvironment = {
       id: crypto.randomUUID(),
@@ -264,28 +290,24 @@ export function useProjects() {
       itens: [],
     };
 
-    setProjects((currentProjects) => {
-      const nextProjects = currentProjects.map((project) => {
-        if (String(project.id) !== String(projectId)) {
-          return project;
-        }
+    const nextProjects = projects.map((currentProject) => {
+      if (String(currentProject.id) !== String(projectId)) {
+        return currentProject;
+      }
 
-        const ambientes = [...(project.ambientes || []), newEnvironment];
-        const totalMdf = ambientes.reduce((sum, ambiente) => sum + Number(ambiente.mdfM2 || 0), 0);
-        const totalArea = ambientes.reduce((sum, ambiente) => sum + Number(ambiente.areaM2 || 0), 0);
-
-        return {
-          ...project,
-          ambientes,
-          totalMdf,
-          totalArea,
-          percentualMedio: totalArea === 0 ? 0 : (totalMdf / totalArea) * 100,
-        };
+      return recalculateProjectTotals({
+        ...currentProject,
+        ambientes: [...(currentProject.ambientes || []), newEnvironment],
       });
-
-      writeLocalProjects(nextProjects);
-      return nextProjects;
     });
+
+    setProjects(nextProjects);
+    writeLocalProjects(nextProjects);
+
+    const updatedProject = nextProjects.find((currentProject) => String(currentProject.id) === String(projectId));
+    if (updatedProject) {
+      await persistProjectToApi(updatedProject, 'Novo ambiente salvo localmente porque a API não respondeu.');
+    }
 
     return newEnvironment;
   }

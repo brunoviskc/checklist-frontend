@@ -143,6 +143,10 @@ function timeoutSignal(ms = 5000) {
   return { signal: controller.signal, clear: () => window.clearTimeout(timeoutId) };
 }
 
+function toPersistedId(id) {
+  return Number.isFinite(Number(id)) ? Number(id) : undefined;
+}
+
 export function normalizeProject(rawProject) {
   const ambientes = rawProject.ambientes || rawProject.listaAmbientes || rawProject.ambienteList || [];
   const materiaisMdf = rawProject.materiaisMdf || rawProject.mdfMateriais || rawProject.materials || rawProject.mdfMaterials || [];
@@ -228,13 +232,12 @@ export function normalizeProject(rawProject) {
 
 export function toApiProjectPayload(project) {
   return {
-    id: project.id,
+    id: toPersistedId(project.id),
     nomeCliente: project.nomeCliente ?? project.cliente ?? project.nomeProjeto,
     nomeVendedor: project.nomeVendedor ?? '',
     nomeArquiteto: project.nomeArquiteto ?? '',
-    dataCriacao: project.dataCriacao ?? project.createdAt,
     ambientes: (project.ambientes || []).map((ambiente) => ({
-      id: ambiente.id,
+      id: toPersistedId(ambiente.id),
       nome: ambiente.nome,
       tipoAmbiente: ambiente.tipoAmbiente,
       acabamentoInterno: ambiente.acabamentoInterno,
@@ -301,6 +304,15 @@ export async function getProjects() {
 export async function createProjectOnApi(project) {
   const data = await request('/api/projetos', {
     method: 'POST',
+    body: JSON.stringify(toApiProjectPayload(project)),
+  });
+
+  return normalizeProject(data || project);
+}
+
+export async function updateProjectOnApi(id, project) {
+  const data = await request(`/api/projetos/${id}`, {
+    method: 'PUT',
     body: JSON.stringify(toApiProjectPayload(project)),
   });
 
