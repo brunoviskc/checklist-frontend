@@ -4,7 +4,8 @@ import { computeMdfCompositionFromAmbientes } from '../utils/mdfComposition';
 
 export function MdfChart({ ambientes = [], materiaisMdf }) {
   const computed = computeMdfCompositionFromAmbientes(ambientes || []);
-  const source = materiaisMdf && materiaisMdf.length ? materiaisMdf : computed;
+  // Prioritize computed composition from ambientes; fall back to legacy materiaisMdf when computed empty
+  const source = computed && computed.length ? computed : (materiaisMdf || []);
   const { chartData, totalPercent } = useMdfStats(source);
 
   return (

@@ -290,6 +290,10 @@ async function request(path, options = {}) {
 }
 
 export async function getProjects() {
+  // Dev helper: force local fallback when URL contains ?local=1
+  if (typeof window !== 'undefined' && window.location && window.location.search && window.location.search.includes('local=1')) {
+    throw new Error('force-local');
+  }
   const data = await request('/api/projetos');
   return (Array.isArray(data) ? data : []).map(normalizeProject);
 }
