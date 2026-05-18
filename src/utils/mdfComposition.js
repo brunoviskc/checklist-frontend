@@ -1,20 +1,26 @@
 export function computeMdfCompositionFromAmbientes(ambientes = []) {
   const counts = {};
-  let totalCount = 0;
+  let totalVotes = 0;
 
   ambientes.forEach((a) => {
     if (!a) return;
-    // Priorize acabamento interno quando disponível, caso contrário use acabamento externo
-    const key = a.acabamentoInterno || a.acabamentoExterno;
-    if (!key) return;
+    const interno = a.acabamentoInterno;
+    const externo = a.acabamentoExterno;
 
-    counts[key] = (counts[key] || 0) + 1;
-    totalCount += 1;
+    if (interno) {
+      counts[interno] = (counts[interno] || 0) + 1;
+      totalVotes += 1;
+    }
+
+    if (externo) {
+      counts[externo] = (counts[externo] || 0) + 1;
+      totalVotes += 1;
+    }
   });
 
-  if (totalCount === 0) return [];
+  if (totalVotes === 0) return [];
 
   return Object.entries(counts)
-    .map(([nome, count]) => ({ nome, percentual: (count / totalCount) * 100, cor: undefined }))
+    .map(([nome, votes]) => ({ nome, percentual: (votes / totalVotes) * 100, cor: undefined }))
     .sort((a, b) => b.percentual - a.percentual);
 }
