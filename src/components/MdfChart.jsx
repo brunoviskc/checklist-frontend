@@ -1,8 +1,11 @@
 import { Pie, PieChart, ResponsiveContainer, Tooltip, Cell, Legend, Label } from 'recharts';
 import { useMdfStats } from '../hooks/useMdfStats';
+import { computeMdfCompositionFromAmbientes } from '../utils/mdfComposition';
 
-export function MdfChart({ materiaisMdf }) {
-  const { chartData, totalPercent } = useMdfStats(materiaisMdf);
+export function MdfChart({ ambientes = [], materiaisMdf }) {
+  const computed = computeMdfCompositionFromAmbientes(ambientes || []);
+  const source = materiaisMdf && materiaisMdf.length ? materiaisMdf : computed;
+  const { chartData, totalPercent } = useMdfStats(source);
 
   return (
     <div className="chart-block">

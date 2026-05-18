@@ -1,3 +1,5 @@
+import { computeMdfCompositionFromAmbientes } from '../utils/mdfComposition';
+
 export function OrdemServico({ project }) {
   return (
     <article className="print-document">
@@ -61,19 +63,24 @@ export function OrdemServico({ project }) {
         </table>
       </section>
 
-      {project.materiaisMdf?.length > 0 && (
-        <section className="print-section">
-          <h2>Composição MDF por cliente</h2>
-          <div className="print-materials">
-            {project.materiaisMdf.map((material) => (
-              <div key={material.nome} className="print-material-item">
-                <strong>{material.percentual.toFixed(0)}%</strong>
-                <span>{material.nome}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      {(() => {
+        const composition = computeMdfCompositionFromAmbientes(project.ambientes || []);
+        if (composition.length === 0) return null;
+
+        return (
+          <section className="print-section">
+            <h2>Composição MDF por cliente</h2>
+            <div className="print-materials">
+              {composition.map((material) => (
+                <div key={material.nome} className="print-material-item">
+                  <strong>{Math.round(material.percentual)}%</strong>
+                  <span>{material.nome}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        );
+      })()}
     </article>
   );
 }

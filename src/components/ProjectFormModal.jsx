@@ -29,9 +29,6 @@ function createEmptyEnvironment(index = 0) {
   };
 }
 
-function createEmptyMaterialRow(index = 0) {
-  return { id: `mat-${index + 1}`, nome: ENUMS.materiaisMdf[index] || '', percentual: index === 0 ? 100 : 0 };
-}
 
 function SelectField({ label, value, onChange, options, required = false }) {
   return (
@@ -54,7 +51,6 @@ export function ProjectFormModal({ open, onClose, onSubmit }) {
     nomeCliente: '',
     nomeVendedor: '',
     nomeArquiteto: '',
-    materiaisMdf: [createEmptyMaterialRow(0), createEmptyMaterialRow(1), createEmptyMaterialRow(2)],
     ambientes: [createEmptyEnvironment(0)],
   });
 
@@ -64,7 +60,6 @@ export function ProjectFormModal({ open, onClose, onSubmit }) {
         nomeCliente: '',
         nomeVendedor: '',
         nomeArquiteto: '',
-        materiaisMdf: [createEmptyMaterialRow(0), createEmptyMaterialRow(1), createEmptyMaterialRow(2)],
         ambientes: [createEmptyEnvironment(0)],
       });
     }
@@ -88,8 +83,7 @@ export function ProjectFormModal({ open, onClose, onSubmit }) {
               nomeCliente: form.nomeCliente,
               nomeVendedor: form.nomeVendedor,
               nomeArquiteto: form.nomeArquiteto,
-              materiaisMdf: form.materiaisMdf.filter((row) => row.nome && Number(row.percentual) > 0),
-              ambientes: form.ambientes.filter((ambiente) => ambiente.nome && ambiente.tipoAmbiente && ambiente.acabamentoInterno && ambiente.acabamentoExterno),
+              ambientes: form.ambientes.filter((ambiente) => ambiente.nome && ambiente.tipoAmbiente),
             });
           }}
         >
@@ -120,67 +114,7 @@ export function ProjectFormModal({ open, onClose, onSubmit }) {
             </label>
           </div>
 
-          <section className="form-section">
-            <div className="section-head">
-              <h3>Composição MDF</h3>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setForm((current) => ({ ...current, materiaisMdf: [...current.materiaisMdf, createEmptyMaterialRow(current.materiaisMdf.length)] }))}
-              >
-                Adicionar material
-              </button>
-            </div>
-
-            <div className="stacked-list">
-              {form.materiaisMdf.map((material, index) => (
-                <div className="stacked-item" key={material.id}>
-                  <label className="field-group">
-                    <span>Material</span>
-                    <select
-                      value={material.nome}
-                      onChange={(event) => setForm((current) => {
-                        const materiaisMdf = [...current.materiaisMdf];
-                        materiaisMdf[index] = { ...material, nome: event.target.value };
-                        return { ...current, materiaisMdf };
-                      })}
-                    >
-                      <option value="">Selecione</option>
-                      {ENUMS.materiaisMdf.map((option) => (
-                        <option key={option} value={option}>{option}</option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="field-group compact">
-                    <span>%</span>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={material.percentual}
-                      onChange={(event) => setForm((current) => {
-                        const materiaisMdf = [...current.materiaisMdf];
-                        materiaisMdf[index] = { ...material, percentual: event.target.value };
-                        return { ...current, materiaisMdf };
-                      })}
-                    />
-                  </label>
-
-                  <button
-                    type="button"
-                    className="ghost-button"
-                    onClick={() => setForm((current) => ({
-                      ...current,
-                      materiaisMdf: current.materiaisMdf.filter((_, materialIndex) => materialIndex !== index),
-                    }))}
-                  >
-                    Remover
-                  </button>
-                </div>
-              ))}
-            </div>
-          </section>
+          {/* Composição MDF removida: será calculada automaticamente a partir dos ambientes */}
 
           <section className="form-section">
             <div className="section-head">

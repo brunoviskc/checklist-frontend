@@ -159,7 +159,7 @@ function ClientePanelPage({ projects, selectedProjectId, onAddEnvironment, onEdi
       </div>
 
       <div className="detail-card chart-card">
-        <MdfChart materiaisMdf={project.materiaisMdf} />
+        <MdfChart ambientes={project.ambientes} materiaisMdf={project.materiaisMdf} />
       </div>
 
       <div className="detail-card">
