@@ -1,30 +1,20 @@
 export function computeMdfCompositionFromAmbientes(ambientes = []) {
-  const totals = {};
-  let totalMdf = 0;
+  const counts = {};
+  let totalCount = 0;
 
   ambientes.forEach((a) => {
-    const mdf = Number(a.mdfM2 || 0);
-    if (!mdf || mdf <= 0) return;
+    if (!a) return;
+    // Priorize acabamento interno quando disponível, caso contrário use acabamento externo
+    const key = a.acabamentoInterno || a.acabamentoExterno;
+    if (!key) return;
 
-    const interno = a.acabamentoInterno;
-    const externo = a.acabamentoExterno;
-
-    if (interno && externo && interno !== externo) {
-      totals[interno] = (totals[interno] || 0) + mdf / 2;
-      totals[externo] = (totals[externo] || 0) + mdf / 2;
-      totalMdf += mdf;
-    } else if (interno) {
-      totals[interno] = (totals[interno] || 0) + mdf;
-      totalMdf += mdf;
-    } else if (externo) {
-      totals[externo] = (totals[externo] || 0) + mdf;
-      totalMdf += mdf;
-    }
+    counts[key] = (counts[key] || 0) + 1;
+    totalCount += 1;
   });
 
-  if (totalMdf <= 0) return [];
+  if (totalCount === 0) return [];
 
-  return Object.entries(totals)
-    .map(([nome, m2], index) => ({ nome, percentual: (m2 / totalMdf) * 100, cor: undefined }))
+  return Object.entries(counts)
+    .map(([nome, count]) => ({ nome, percentual: (count / totalCount) * 100, cor: undefined }))
     .sort((a, b) => b.percentual - a.percentual);
 }
