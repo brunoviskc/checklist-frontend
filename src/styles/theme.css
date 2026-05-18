@@ -756,6 +756,31 @@ a {
   cursor: pointer;
 }
 
+.summary-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.summary-title > span:first-child {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.summary-type-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 5px 12px;
+  background: rgba(20, 184, 166, 0.14);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .accordion-list summary::-webkit-details-marker {
   display: none;
 }
@@ -835,6 +860,81 @@ a {
 .print-table th {
   text-align: left;
   background: var(--bg-soft);
+}
+
+.print-environment-list {
+  display: grid;
+  gap: 14px;
+}
+
+.print-environment-card {
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(12, 20, 35, 0.98), rgba(10, 17, 31, 0.98));
+  overflow: hidden;
+  box-shadow: 0 18px 44px rgba(2, 6, 23, 0.12);
+}
+
+.print-environment-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.print-environment-title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.print-environment-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.print-environment-type {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 5px 12px;
+  background: rgba(20, 184, 166, 0.14);
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.print-environment-body {
+  padding: 18px 20px 20px;
+  display: grid;
+  gap: 10px;
+  color: var(--muted);
+}
+
+.print-environment-body p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.print-environment-items {
+  margin-top: 6px;
+}
+
+.print-environment-items strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.print-environment-items ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.print-environment-items li + li {
+  margin-top: 4px;
 }
 
 .modal-backdrop {

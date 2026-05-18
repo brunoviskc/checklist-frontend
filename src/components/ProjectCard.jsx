@@ -1,8 +1,12 @@
 import React from 'react';
+import { computeMdfCompositionFromAmbientes } from '../utils/mdfComposition';
+import { pickMaterialColor } from '../utils/materialColors';
 
 export function ProjectCard({ project, isSelected, onOpen, onPrint, onDelete }) {
   const [isExpanded, setIsExpanded] = React.useState(false);
-  const materials = project.materiaisMdf?.length ? project.materiaisMdf : [{ nome: 'MDF BRANCO', percentual: 100, cor: '#14b8a6' }];
+  const computed = computeMdfCompositionFromAmbientes(project.ambientes || []);
+  const materialsRaw = computed && computed.length ? computed : (project.materiaisMdf?.length ? project.materiaisMdf : [{ nome: 'MDF BRANCO', percentual: 100 }]);
+  const materials = materialsRaw.map((m, i) => ({ ...m, cor: m.cor ?? pickMaterialColor(m.nome || m.name, i) }));
   const totalPercentual = materials.reduce((sum, material) => sum + Number(material.percentual || 0), 0) || 100;
 
   return (

@@ -14,7 +14,6 @@ import { pickMaterialColor } from './utils/materialColors';
 import { computeMdfCompositionFromAmbientes } from './utils/mdfComposition';
 
 const environmentEnumFields = [
-  { key: 'tipoAmbiente', label: 'Tipo' },
   { key: 'acabamentoInterno', label: 'Acabamento interno' },
   { key: 'acabamentoExterno', label: 'Acabamento externo' },
   { key: 'acabamentoPerfil', label: 'Acabamento do perfil' },
@@ -179,7 +178,14 @@ function ClientePanelPage({ projects, selectedProjectId, onAddEnvironment, onEdi
           {project.ambientes.map((ambiente) => (
             <details key={ambiente.id}>
               <summary>
-                <span>{ambiente.nome}</span>
+                <div className="summary-title">
+                  <span>{ambiente.nome}</span>
+                  {ambiente.tipoAmbiente && (
+                    <span className="summary-type-pill">
+                      Tipo: {formatEnumLabel(ambiente.tipoAmbiente)}
+                    </span>
+                  )}
+                </div>
                 <div className="summary-actions">
                   <button
                     type="button"
