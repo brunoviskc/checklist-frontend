@@ -11,6 +11,7 @@ import { MdfChart } from './components/MdfChart';
 import { OrdemServico } from './components/OrdemServico';
 import { formatEnumLabel } from './constants/backendEnums';
 import { pickMaterialColor } from './utils/materialColors';
+import { computeMdfCompositionFromAmbientes } from './utils/mdfComposition';
 
 const environmentEnumFields = [
   { key: 'tipoAmbiente', label: 'Tipo' },
