@@ -62,7 +62,7 @@ export function ProjectCard({ project, isSelected, onOpen, onPrint, onDelete }) 
                     style={{ backgroundColor: material.cor || ['#14b8a6', '#f59e0b', '#ef4444', '#0ea5e9', '#8b5cf6'][index % 5] }}
                     aria-hidden="true"
                   />
-                  <span className="project-mdf-text">{material.percentual.toFixed(0)}% {material.nome}</span>
+                  <span className="project-mdf-text">{material.percentual.toFixed(0)}%</span>
                 </button>
               ))}
             </div>

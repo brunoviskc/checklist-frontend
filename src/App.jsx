@@ -6,6 +6,7 @@ import { Header } from './components/Header';
 import { ProjectCard } from './components/ProjectCard';
 import { ProjectFormModal } from './components/ProjectFormModal';
 import { ProjectInfoModal } from './components/ProjectInfoModal';
+import { EnvironmentFormModal } from './components/EnvironmentFormModal';
 import { MdfChart } from './components/MdfChart';
 import { OrdemServico } from './components/OrdemServico';
 import { formatEnumLabel } from './constants/backendEnums';
@@ -125,7 +126,7 @@ function DashboardPage({ projects, loading, error, search, setSearch, onDeletePr
   );
 }
 
-function ClientePanelPage({ projects, selectedProjectId, onAddEnvironment, onEditProject }) {
+function ClientePanelPage({ projects, selectedProjectId, onAddEnvironment, onEditProject, onEditEnvironment, onDeleteEnvironment }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const project = projects.find((item) => String(item.id) === String(id)) || projects.find((item) => String(item.id) === String(selectedProjectId));
@@ -177,7 +178,39 @@ function ClientePanelPage({ projects, selectedProjectId, onAddEnvironment, onEdi
             <details key={ambiente.id}>
               <summary>
                 <span>{ambiente.nome}</span>
-                <strong>{ambiente.mdfM2.toFixed(2)} m² MDF</strong>
+                <div className="summary-actions">
+                  <button
+                    type="button"
+                    className="summary-edit-button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onEditEnvironment(project.id, ambiente.id);
+                    }}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    className="summary-delete-button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onDeleteEnvironment(project.id, ambiente.id);
+                    }}
+                  >
+                    Excluir
+                  </button>
+                  <div className="summary-material-dots" aria-hidden="true">
+                    {(ambiente.materiaisMdf?.length ? ambiente.materiaisMdf : project.materiaisMdf)?.map((mat, i) => (
+                      <span
+                        key={`${ambiente.id}-mat-${i}`}
+                        className="material-dot summary-dot"
+                        style={{ backgroundColor: mat.cor }}
+                      />
+                    ))}
+                  </div>
+                </div>
               </summary>
               <div className="accordion-content">
                 {environmentEnumFields
@@ -228,19 +261,29 @@ function AppContent() {
     createProject,
     deleteProject,
     updateProject,
+    updateEnvironmentInProject,
+    deleteEnvironmentFromProject,
     addEnvironmentToProject,
     selectedProjectId,
   } = useProjects();
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [editingProjectId, setEditingProjectId] = React.useState(null);
+  const [editingEnvironment, setEditingEnvironment] = React.useState(null);
   const editingProject = projects.find((project) => String(project.id) === String(editingProjectId));
+
+  function handleAddEnvironment(projectId) {
+    const newEnv = addEnvironmentToProject(projectId);
+    if (newEnv) {
+      setEditingEnvironment({ projectId, environment: newEnv });
+    }
+  }
 
   return (
     <BrowserRouter>
       <Shell
         onCreateProject={() => setIsModalOpen(true)}
-        onAddEnvironment={addEnvironmentToProject}
+        onAddEnvironment={handleAddEnvironment}
         search={search}
         setSearch={setSearch}
         projects={filteredProjects}
@@ -270,8 +313,13 @@ function AppContent() {
               <ClientePanelPage
                 projects={projects}
                 selectedProjectId={selectedProjectId}
-                onAddEnvironment={addEnvironmentToProject}
+                onAddEnvironment={handleAddEnvironment}
                 onEditProject={(projectId) => setEditingProjectId(projectId)}
+                onEditEnvironment={(projectId, environmentId) => setEditingEnvironment({
+                  projectId,
+                  environment: projects.find((project) => String(project.id) === String(projectId))?.ambientes.find((ambiente) => String(ambiente.id) === String(environmentId)),
+                })}
+                onDeleteEnvironment={(projectId, environmentId) => deleteEnvironmentFromProject(projectId, environmentId)}
               />
             }
           />
@@ -296,6 +344,20 @@ function AppContent() {
         onSubmit={(payload) => {
           updateProject(editingProject.id, payload);
           setEditingProjectId(null);
+        }}
+      />
+
+      <EnvironmentFormModal
+        open={Boolean(editingEnvironment?.environment)}
+        environment={editingEnvironment?.environment}
+        onClose={() => setEditingEnvironment(null)}
+        onSubmit={(payload) => {
+          if (!editingEnvironment?.environment) {
+            return;
+          }
+
+          updateEnvironmentInProject(editingEnvironment.projectId, editingEnvironment.environment.id, payload);
+          setEditingEnvironment(null);
         }}
       />
     </BrowserRouter>

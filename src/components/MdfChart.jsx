@@ -29,10 +29,9 @@ export function MdfChart({ materiaisMdf }) {
 
       <div className="material-breakdown">
         {chartData.map((material) => (
-          <div className="material-pill" key={material.name}>
+          <div className="material-pill" key={material.name} aria-label={`${material.value.toFixed(0)}% ${material.name}`}>
             <span className="material-dot" style={{ backgroundColor: material.color }} aria-hidden="true" />
-            <strong>{material.value.toFixed(0)}%</strong>
-            <span>{material.name}</span>
+            <span className="material-percent">{material.value.toFixed(0)}%</span>
           </div>
         ))}
       </div>

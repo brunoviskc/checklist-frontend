@@ -23,6 +23,10 @@ const fallbackProjects = [
         tipoRodape: 'MDF',
         areaM2: 18.4,
         mdfM2: 12.8,
+        materiaisMdf: [
+          { nome: 'MDF BRANCO', percentual: 70, cor: '#0ea5e9' },
+          { nome: 'MDF VERDE', percentual: 30, cor: '#22c55e' },
+        ],
         itens: [
           { descricao: 'Guarda-roupa', quantidade: 1, unidade: 'conjunto' },
           { descricao: 'Mesa de apoio', quantidade: 1, unidade: 'peça' },
@@ -38,6 +42,9 @@ const fallbackProjects = [
         tipoLed: 'PADRAO_OG',
         areaM2: 15.2,
         mdfM2: 8.7,
+        materiaisMdf: [
+          { nome: 'MDF BRANCO', percentual: 100, cor: '#0ea5e9' },
+        ],
         itens: [
           { descricao: 'Cabideiro', quantidade: 1, unidade: 'unidade' },
           { descricao: 'Prateleiras', quantidade: 4, unidade: 'unidade' },
@@ -67,6 +74,10 @@ const fallbackProjects = [
         tipoRodape: 'ALVENARIA',
         areaM2: 12.1,
         mdfM2: 6.2,
+        materiaisMdf: [
+          { nome: 'MDF CARVALHO', percentual: 55, cor: '#a16207' },
+          { nome: 'MDF PRETO', percentual: 45, cor: '#64748b' },
+        ],
         itens: [
           { descricao: 'Balcão curvo', quantidade: 1, unidade: 'peça' },
           { descricao: 'Painel institucional', quantidade: 1, unidade: 'peça' },
@@ -82,6 +93,9 @@ const fallbackProjects = [
         tipoPuxador: 'EXTERNO_ZEN',
         areaM2: 21.9,
         mdfM2: 14.6,
+        materiaisMdf: [
+          { nome: 'MDF PRETO', percentual: 100, cor: '#64748b' },
+        ],
         itens: [
           { descricao: 'Módulos expositores', quantidade: 4, unidade: 'unidade' },
           { descricao: 'Mesa central', quantidade: 1, unidade: 'peça' },
@@ -110,6 +124,10 @@ const fallbackProjects = [
         tipoPorta: 'RIPADA',
         areaM2: 14.2,
         mdfM2: 9.1,
+        materiaisMdf: [
+          { nome: 'MDF FREIJO', percentual: 60, cor: '#f59e0b' },
+          { nome: 'MDF PRETO', percentual: 40, cor: '#8b5cf6' },
+        ],
         itens: [
           { descricao: 'Guarda-roupa', quantidade: 1, unidade: 'conjunto' },
           { descricao: 'Mesa de estudo', quantidade: 1, unidade: 'peça' },
@@ -132,6 +150,7 @@ export function normalizeProject(rawProject) {
   const normalizedAmbientes = ambientes.map((ambiente, index) => {
     const areaM2 = Number(ambiente.areaM2 ?? ambiente.area ?? ambiente.totalArea ?? ambiente.m2 ?? 0);
     const mdfM2 = Number(ambiente.mdfM2 ?? ambiente.areaMdf ?? ambiente.mdf ?? ambiente.mdfTotal ?? areaM2 * 0.65);
+    const materiaisAmbiente = ambiente.materiaisMdf || ambiente.mdfMateriais || ambiente.materials || ambiente.mdfMaterials || [];
 
     return {
       id: ambiente.id ?? `${rawProject.id || 'project'}-${index + 1}`,
@@ -156,6 +175,13 @@ export function normalizeProject(rawProject) {
       observacoes: ambiente.observacoes ?? '',
       areaM2,
       mdfM2,
+      materiaisMdf: materiaisAmbiente
+        .map((material, materialIndex) => ({
+          nome: material.nome ?? material.material ?? material.descricao ?? `Material ${materialIndex + 1}`,
+          percentual: Number(material.percentual ?? material.percent ?? material.porcentagem ?? 0),
+          cor: material.cor ?? material.color ?? ['#0ea5e9', '#14b8a6', '#f59e0b', '#ef4444', '#8b5cf6'][materialIndex % 5],
+        }))
+        .filter((material) => material.nome),
       itens: (ambiente.itens || ambiente.listaItens || []).map((item, itemIndex) => ({
         descricao: item.descricao ?? item.nome ?? item.nomeItem ?? `Item ${itemIndex + 1}`,
         quantidade: Number(item.quantidade ?? item.qtd ?? 1),
@@ -229,6 +255,7 @@ export function toApiProjectPayload(project) {
       tipoRodape: ambiente.tipoRodape || null,
       observacoes: ambiente.observacoes || '',
       itens: ambiente.itens || [],
+      materiaisMdf: ambiente.materiaisMdf || [],
       areaM2: ambiente.areaM2,
       mdfM2: ambiente.mdfM2,
     })),

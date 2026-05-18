@@ -169,41 +169,25 @@ export function useProjects() {
     });
   }
 
-  function addEnvironmentToProject(projectId) {
+  function updateEnvironmentInProject(projectId, environmentId, payload) {
     setProjects((currentProjects) => {
       const nextProjects = currentProjects.map((project) => {
         if (String(project.id) !== String(projectId)) {
           return project;
         }
 
-        const nextIndex = (project.ambientes?.length || 0) + 1;
-        const newEnvironment = {
-          id: crypto.randomUUID(),
-          nome: `Ambiente ${nextIndex}`,
-          tipoAmbiente: null,
-          acabamentoInterno: null,
-          acabamentoExterno: null,
-          acabamentoPerfil: null,
-          acabamentoTelinha: null,
-          tipoPorta: null,
-          tipoPortaPassagem: null,
-          tipoPuxador: null,
-          tipoVidro: null,
-          tipoCorredica: null,
-          tipoDobradica: null,
-          tipoAventos: null,
-          tipoAcessorio: null,
-          tipoCabideiro: null,
-          tipoLed: null,
-          tipoPainel: null,
-          tipoRodape: null,
-          observacoes: '',
-          areaM2: 0,
-          mdfM2: 0,
-          itens: [],
-        };
+        const ambientes = (project.ambientes || []).map((ambiente) => {
+          if (String(ambiente.id) !== String(environmentId)) {
+            return ambiente;
+          }
 
-        const ambientes = [...(project.ambientes || []), newEnvironment];
+          return {
+            ...ambiente,
+            ...payload,
+            id: ambiente.id,
+          };
+        });
+
         const totalMdf = ambientes.reduce((sum, ambiente) => sum + Number(ambiente.mdfM2 || 0), 0);
         const totalArea = ambientes.reduce((sum, ambiente) => sum + Number(ambiente.areaM2 || 0), 0);
 
@@ -221,6 +205,91 @@ export function useProjects() {
     });
   }
 
+  function deleteEnvironmentFromProject(projectId, environmentId) {
+    setProjects((currentProjects) => {
+      const nextProjects = currentProjects.map((project) => {
+        if (String(project.id) !== String(projectId)) {
+          return project;
+        }
+
+        const ambientes = (project.ambientes || []).filter((ambiente) => String(ambiente.id) !== String(environmentId));
+        const totalMdf = ambientes.reduce((sum, ambiente) => sum + Number(ambiente.mdfM2 || 0), 0);
+        const totalArea = ambientes.reduce((sum, ambiente) => sum + Number(ambiente.areaM2 || 0), 0);
+
+        return {
+          ...project,
+          ambientes,
+          totalMdf,
+          totalArea,
+          percentualMedio: totalArea === 0 ? 0 : (totalMdf / totalArea) * 100,
+        };
+      });
+
+      writeLocalProjects(nextProjects);
+      return nextProjects;
+    });
+  }
+
+  function addEnvironmentToProject(projectId) {
+    const nextIndex = 1 + (function findCount(projects) {
+      const project = projects.find((p) => String(p.id) === String(projectId));
+      return project ? (project.ambientes?.length || 0) : 0;
+    })(
+      JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') || []
+    );
+
+    const newEnvironment = {
+      id: crypto.randomUUID(),
+      nome: `Ambiente ${nextIndex}`,
+      tipoAmbiente: null,
+      acabamentoInterno: null,
+      acabamentoExterno: null,
+      acabamentoPerfil: null,
+      acabamentoTelinha: null,
+      tipoPorta: null,
+      tipoPortaPassagem: null,
+      tipoPuxador: null,
+      tipoVidro: null,
+      tipoCorredica: null,
+      tipoDobradica: null,
+      tipoAventos: null,
+      tipoAcessorio: null,
+      tipoCabideiro: null,
+      tipoLed: null,
+      tipoPainel: null,
+      tipoRodape: null,
+      observacoes: '',
+      areaM2: 0,
+      mdfM2: 0,
+      itens: [],
+    };
+
+    setProjects((currentProjects) => {
+      const nextProjects = currentProjects.map((project) => {
+        if (String(project.id) !== String(projectId)) {
+          return project;
+        }
+
+        const ambientes = [...(project.ambientes || []), newEnvironment];
+        const totalMdf = ambientes.reduce((sum, ambiente) => sum + Number(ambiente.mdfM2 || 0), 0);
+        const totalArea = ambientes.reduce((sum, ambiente) => sum + Number(ambiente.areaM2 || 0), 0);
+
+        return {
+          ...project,
+          ambientes,
+          totalMdf,
+          totalArea,
+          percentualMedio: totalArea === 0 ? 0 : (totalMdf / totalArea) * 100,
+        };
+      });
+
+      writeLocalProjects(nextProjects);
+      return nextProjects;
+    });
+
+    return newEnvironment;
+  }
+
   return {
     projects,
     filteredProjects,
@@ -231,6 +300,8 @@ export function useProjects() {
     createProject,
     deleteProject,
     updateProject,
+    updateEnvironmentInProject,
+    deleteEnvironmentFromProject,
     addEnvironmentToProject,
     selectedProjectId,
   };
