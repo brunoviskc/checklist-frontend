@@ -1,11 +1,14 @@
 import { Pie, PieChart, ResponsiveContainer, Tooltip, Cell, Legend, Label } from 'recharts';
 import { useMdfStats } from '../hooks/useMdfStats';
 import { computeMdfCompositionFromAmbientes } from '../utils/mdfComposition';
+import { pickMaterialColor } from '../utils/materialColors';
 
 export function MdfChart({ ambientes = [], materiaisMdf }) {
   const computed = computeMdfCompositionFromAmbientes(ambientes || []);
-  // Prioritize computed composition from ambientes; fall back to legacy materiaisMdf when computed empty
-  const source = computed && computed.length ? computed : (materiaisMdf || []);
+  // Prefer computed composition; fallback to legacy materiaisMdf
+  const sourceRaw = computed && computed.length ? computed : (materiaisMdf || []);
+  // Ensure each material has a color assigned deterministically
+  const source = sourceRaw.map((m, i) => ({ ...m, cor: m.cor ?? pickMaterialColor(m.nome || m.name, i) }));
   const { chartData, totalPercent } = useMdfStats(source);
 
   return (

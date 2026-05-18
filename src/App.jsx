@@ -10,6 +10,7 @@ import { EnvironmentFormModal } from './components/EnvironmentFormModal';
 import { MdfChart } from './components/MdfChart';
 import { OrdemServico } from './components/OrdemServico';
 import { formatEnumLabel } from './constants/backendEnums';
+import { pickMaterialColor } from './utils/materialColors';
 
 const environmentEnumFields = [
   { key: 'tipoAmbiente', label: 'Tipo' },
@@ -202,14 +203,19 @@ function ClientePanelPage({ projects, selectedProjectId, onAddEnvironment, onEdi
                     Excluir
                   </button>
                   <div className="summary-material-dots" aria-hidden="true">
-                    {(ambiente.materiaisMdf?.length ? ambiente.materiaisMdf : project.materiaisMdf)?.map((mat, i) => (
-                      <span
-                        key={`${ambiente.id}-mat-${i}`}
-                        className="material-dot summary-dot"
-                        style={{ backgroundColor: mat.cor }}
-                      />
-                    ))}
-                  </div>
+                      {(() => {
+                        const projectComp = computeMdfCompositionFromAmbientes(project.ambientes || []);
+                        const colorMap = projectComp.reduce((acc, m, idx) => ({ ...acc, [m.nome]: pickMaterialColor(m.nome, idx) }), {});
+                        const envComp = computeMdfCompositionFromAmbientes([ambiente]);
+                        return envComp.map((m, i) => (
+                          <span
+                            key={`${ambiente.id}-mat-${i}`}
+                            className="material-dot summary-dot"
+                            style={{ backgroundColor: colorMap[m.nome] || pickMaterialColor(m.nome, i) }}
+                          />
+                        ));
+                      })()}
+                    </div>
                 </div>
               </summary>
               <div className="accordion-content">
